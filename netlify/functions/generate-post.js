@@ -4,26 +4,20 @@ exports.handler = async (event, context) => {
     }
 
     try {
-        const { persona, topic } = JSON.parse(event.body);
-        
-        // You can use OpenAI, OpenRouter, or Gemini here. 
-        // Ensure you add AI_API_KEY to your Netlify Environment Variables.
         const apiKey = process.env.AI_API_KEY; 
 
-        // The exact personas to seed the problems your guide and SaaS solve
-        const prompts = {
-            frustrated_seller: `Act as a stressed Etsy seller. Write a short, casual Reddit post complaining about how Etsy ads are eating your profit margins. Ask if anyone has had success with organic traffic or Pinterest. Use lowercase for the title. Do not use hashtags. Use words like 'CPC', 'margins', and 'ROAS'. Topic context: ${topic}`,
-            
-            pinterest_beginner: `Act as an Etsy seller who just realized they need to use Pinterest. Write a short Reddit post asking how people manage to post so many pins without burning out. Ask if there is a system or workflow. Casual tone, no hashtags. Topic context: ${topic}`,
-            
-            hybrid_convert: `Act as a seller who just made their first POD (print on demand) sale after starting with digital downloads. Share it as a small win. Keep it humble and short. No hashtags. Topic context: ${topic}`,
-            
-            organic_skeptic: `Act as a cynical Reddit user. Write a short post asking if it's actually possible to get sales on Etsy in 2026 without paying for ads. Ask for real proof or strategies. No hashtags. Topic context: ${topic}`
-        };
+        // Internal Randomization Engine
+        const topics = ['digital planners', 'POD hoodies', 'SVG files', 'wedding templates', 'budget trackers', 'custom mugs', 'nursery wall art', 'notion templates', 'resume templates'];
+        const randomTopic = topics[Math.floor(Math.random() * topics.length)];
 
-        const systemPrompt = prompts[persona] || prompts.frustrated_seller;
+        const personas = [
+            `Act as a stressed Etsy seller selling ${randomTopic}. Complain about how Etsy ads are eating your profit margins and CPC is too high. Ask if anyone has had success with free organic traffic.`,
+            `Act as an Etsy seller making ${randomTopic} who just realized they need to use Pinterest. Ask how people manage to post so many pins without burning out. Ask if there is a system.`,
+            `Act as a seller who just made their first POD sale (a ${randomTopic}) after starting with digital downloads. Share it as a small win. Keep it humble and short.`,
+            `Act as a cynical Reddit user trying to sell ${randomTopic}. Ask if it's actually possible to get sales on Etsy in 2026 without paying for ads. Ask for real proof.`
+        ];
+        const randomPersona = personas[Math.floor(Math.random() * personas.length)];
 
-        // Example using OpenAI API format (swap URL/model if using a different provider)
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -31,21 +25,31 @@ exports.handler = async (event, context) => {
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: "gpt-4o-mini", // Fast, cheap model perfect for this
+                model: "gpt-4o-mini",
                 messages: [
-                    { role: "system", content: "You are an average, slightly cynical Reddit user posting in an e-commerce subreddit. Never use corporate speak, hashtags, or emojis." },
-                    { role: "user", content: systemPrompt }
+                    { 
+                        role: "system", 
+                        content: "You are an average, slightly frustrated Reddit user in an Etsy seller subreddit. No hashtags, no emojis, no corporate speak. Keep titles lowercase. YOU MUST format your response exactly like this:\nTITLE: [your title here]\nBODY: [your body text here]" 
+                    },
+                    { role: "user", content: randomPersona }
                 ],
-                temperature: 0.8
+                temperature: 0.9
             })
         });
 
         const data = await response.json();
-        const generatedText = data.choices[0].message.content;
+        const rawText = data.choices[0].message.content;
+
+        // Extract Title and Body from the AI response
+        const titleMatch = rawText.match(/TITLE:\s*(.*)/i);
+        const bodyMatch = rawText.match(/BODY:\s*([\s\S]*)/i);
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ post: generatedText })
+            body: JSON.stringify({ 
+                title: titleMatch ? titleMatch[1].trim() : "question about etsy traffic", 
+                body: bodyMatch ? bodyMatch[1].trim() : rawText 
+            })
         };
 
     } catch (error) {
