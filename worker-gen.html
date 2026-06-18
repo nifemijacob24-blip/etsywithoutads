@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internal Content Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 p-8 text-slate-900">
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md border border-slate-200">
+        <h1 class="text-2xl font-bold mb-6">Subreddit Content Engine</h1>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold mb-1">Select Persona</label>
+                <select id="persona" class="w-full p-3 border border-slate-300 rounded-md bg-slate-50">
+                    <option value="frustrated_seller">The Frustrated Ad Spender</option>
+                    <option value="pinterest_beginner">The Overwhelmed Pinterest Beginner</option>
+                    <option value="hybrid_convert">The Hybrid Model Winner</option>
+                    <option value="organic_skeptic">The Organic Traffic Skeptic</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold mb-1">Optional Topic/Niche (e.g., 'digital planners', 'mugs')</label>
+                <input type="text" id="topic" class="w-full p-3 border border-slate-300 rounded-md bg-slate-50" placeholder="Leave blank for general Etsy talk">
+            </div>
+
+            <button id="generateBtn" onclick="generatePost()" class="w-full bg-black text-white font-bold py-3 rounded-md hover:bg-gray-800 transition">
+                Generate Reddit Post
+            </button>
+        </div>
+
+        <div class="mt-8">
+            <label class="block text-sm font-semibold mb-2">Generated Output (Copy & Paste to Reddit)</label>
+            <textarea id="output" class="w-full h-48 p-4 border border-slate-300 rounded-md bg-slate-50 font-mono text-sm" readonly placeholder="Output will appear here..."></textarea>
+        </div>
+    </div>
+
+    <script>
+        async function generatePost() {
+            const btn = document.getElementById('generateBtn');
+            const output = document.getElementById('output');
+            const persona = document.getElementById('persona').value;
+            const topic = document.getElementById('topic').value || "general etsy shop";
+
+            btn.innerText = "Generating...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/.netlify/functions/generate-post', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ persona, topic })
+                });
+
+                const data = await response.json();
+                
+                if(response.ok) {
+                    output.value = data.post;
+                } else {
+                    output.value = "Error generating post. Check console.";
+                }
+            } catch (err) {
+                output.value = "Network error occurred.";
+            } finally {
+                btn.innerText = "Generate Reddit Post";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
