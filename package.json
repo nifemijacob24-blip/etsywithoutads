@@ -1,7 +1,7 @@
 {
   "name": "afflicoguide",
   "version": "1.0.0",
-  "description": "",
+  "description": "\"# etsywithoutads\"",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,5 +9,13 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nifemijacob24-blip/etsywithoutads.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nifemijacob24-blip/etsywithoutads/issues"
+  },
+  "homepage": "https://github.com/nifemijacob24-blip/etsywithoutads#readme"
 }
